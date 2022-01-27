@@ -30,6 +30,7 @@ export default class LitClock extends LitElement {
         grid-template-areas: "min1 . min2" ". letters ." "min3 . min4";
         color: #ddd;
         font-family: Verdana, Geneva, Tahoma, sans-serif;
+        height: 100%;
       }
 
       #minutePoint1 {
@@ -55,7 +56,8 @@ export default class LitClock extends LitElement {
         grid-template-columns: repeat(var(--columns), 1fr);
         grid-auto-rows: 1fr;
         place-items: center;
-        aspect-ratio: 1;
+        width: 100%;
+        height: 100%;
       }
 
       .minutePoint {
@@ -66,19 +68,26 @@ export default class LitClock extends LitElement {
         background-color: #ddd;
       }
 
-      .minutePoint.visible {
+      .minutePoint--on {
         background-color: #000;
         opacity: 1;
       }
 
-      .letter.active {
+      .letter {
+        display: grid;
+        place-items: center;
+        width: 100%;
+        height: 100%;
+      }
+
+      .letter--on {
         color: #000;
       }
     `;
   }
 
   @property({ type: Boolean })
-  round = true;
+  round = false;
 
   @property({ type: Boolean })
   showMinutePoints = true;
@@ -104,7 +113,8 @@ export default class LitClock extends LitElement {
   updateIntervalRegistration?: ReturnType<typeof setInterval>;
 
   get languagePack() {
-    return LitClock.languagePacks.get(this.lang);
+    const langPack = LitClock.languagePacks.get(this.lang);
+    return langPack;
   }
 
   override connectedCallback(): void {
@@ -112,9 +122,10 @@ export default class LitClock extends LitElement {
     this.updateClock();
     // I know that setInterval is not perfect and drifts (in most browsers), but since
     // this only requires minute exact timings and not second exact timing, this should be fine.
-    this.updateIntervalRegistration = setInterval(() => {
-      this.updateClock();
-    }, this.updateInterval);
+    this.updateIntervalRegistration = setInterval(
+      () => this.requestUpdate(),
+      this.updateInterval
+    );
   }
 
   override disconnectedCallback(): void {
@@ -139,9 +150,6 @@ export default class LitClock extends LitElement {
 
     const indices = this.wordsToIndices(timeString.split(" "));
     this.activeRanges = indices;
-
-    // console.log(timeString, indices);
-    this.requestUpdate();
   }
 
   wordsToIndices(timeWords: string[]): { start: number; end: number }[] {
@@ -186,47 +194,40 @@ export default class LitClock extends LitElement {
   }
 
   override render() {
+    this.updateClock();
+    const minutePoints = [];
+
+    for (let i = 1; i <= 4; i++) {
+      const parts = `minutePoint minutePoint--${
+        this.minutePointsVisible >= i ? "on" : "off"
+      }`;
+      minutePoints.push(html`<div
+        id="minutePoint${i}"
+        class="${parts}"
+        part="${parts}"
+      ></div>`);
+    }
+
+    const letters = [];
+
+    for (const [i, letter] of (
+      this.languagePack?.letterSet.flat() || []
+    ).entries()) {
+      const parts = `letter letter--${this.isCharActive(i) ? "on" : "off"}`;
+      letters.push(html`<span class="${parts}" part="${parts}"
+        >${letter}</span
+      >`);
+    }
+
     return html`
-      <div id="wrapper">
-        ${this.showMinutePoints
-          ? html`<div
-                id="minutePoint1"
-                class="minutePoint ${this.minutePointsVisible >= 1
-                  ? "visible"
-                  : ""}"
-              ></div>
-              <div
-                id="minutePoint2"
-                class="minutePoint ${this.minutePointsVisible >= 2
-                  ? "visible"
-                  : ""}"
-              ></div>
-              <div
-                id="minutePoint3"
-                class="minutePoint ${this.minutePointsVisible >= 3
-                  ? "visible"
-                  : ""}"
-              ></div>
-              <div
-                id="minutePoint4"
-                class="minutePoint ${this.minutePointsVisible >= 4
-                  ? "visible"
-                  : ""}"
-              ></div>`
-          : ""}
+      <div id="wrapper" part="mainGrid">
+        ${this.showMinutePoints ? minutePoints : ""}
         <div
           id="letterSet"
+          part="letterSet"
           style="--columns: ${this.languagePack?.letterSet[0].length}"
         >
-          ${this.languagePack?.letterSet
-            .flat()
-            .map(
-              (char, i) =>
-                html`<span
-                  class="letter ${this.isCharActive(i) ? "active" : ""}"
-                  >${char}</span
-                >`
-            )}
+          ${letters}
         </div>
       </div>
     `;

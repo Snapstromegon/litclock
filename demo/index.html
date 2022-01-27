@@ -1,13 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
-  <script src="/rollup/main.js" type="module"></script>
-</head>
-<body>
-  <lit-clock></lit-clock>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="/rollup/main.js" type="module"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        display: grid;
+        place-items: center;
+        height: 100vh;
+        background: #222;
+      }
+
+      lit-clock {
+        width: 30rem;
+        height: 30rem;
+      }
+
+      lit-clock::part(letter) {
+        color: #fff2;
+      }
+
+      lit-clock::part(letter--on) {
+        color: #f00;
+      }
+
+      lit-clock::part(minutePoint) {
+        background-color: #fff2;
+      }
+
+      lit-clock::part(minutePoint--on) {
+        background-color: #f00;
+      }
+
+      lit-clock::part(mainGrid) {
+        grid-template-areas: "min1 min2 min3 min4" "letters letters letters letters";
+        grid-template-columns: repeat(4, 1fr);
+        grid-template-rows: auto 1fr;
+        place-items: center;
+        gap: 1rem 0;
+      }
+    </style>
+  </head>
+  <body>
+    <lit-clock></lit-clock>
+  </body>
 </html>
